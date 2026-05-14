@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Global Mobility Application Analyzer - ML Inference Service</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="global-mobility-analyzer.css">
+</head>
+<body>
+    <div class="background-effects">
+        <div class="blob blob-1"></div>
+        <div class="blob blob-2"></div>
+    </div>
+    
+    <header>
+        <div class="logo">ScholarX | ML Eng</div>
+        <nav>
+            <a href="#" class="active">Analyzer</a>
+            <a href="#">History</a>
+            <a href="#">Settings</a>
+            <a href="#">Profile</a>
+        </nav>
+    </header>
+
+    <main class="container">
+        <section class="hero">
+            <h1>Global Mobility <span class="gradient-text">Application Analyzer</span></h1>
+            <p>Advanced predictive ML inference service for global Visa and relocation applications.</p>
+        </section>
+
+        <section class="analyzer-interface">
+            <div class="glass-panel input-panel">
+                <h2>Application Data</h2>
+                <form id="analyzer-form">
+                    <div class="form-group">
+                        <label for="applicant-name">Applicant Name</label>
+                        <input type="text" id="applicant-name" placeholder="John Doe" required>
+                    </div>
+                    
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="origin-country">Origin Country</label>
+                            <input type="text" id="origin-country" placeholder="e.g., India" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="dest-country">Target Destination</label>
+                            <input type="text" id="dest-country" placeholder="e.g., Canada" required>
+                        </div>
+                    </div>
+
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="visa-type">Visa/Application Type</label>
+                            <select id="visa-type" required>
+                                <option value="skilled_worker">Skilled Worker</option>
+                                <option value="student">Student</option>
+                                <option value="business">Business / Entrepreneur</option>
+                                <option value="family_sponsorship">Family Sponsorship</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label for="experience">Years of Experience</label>
+                            <input type="number" id="experience" min="0" max="50" placeholder="5" required>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="skills">Primary Skills (comma separated)</label>
+                        <input type="text" id="skills" placeholder="Software Engineering, Machine Learning, Python" required>
+                    </div>
+                    
+                    <button type="submit" class="btn-primary" id="analyze-btn">
+                        <span>Run ML Inference</span>
+                        <div class="spinner" id="btn-spinner"></div>
+                    </button>
+                </form>
+            </div>
+
+            <div class="glass-panel result-panel" id="result-panel">
+                <div class="result-placeholder" id="placeholder">
+                    <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83"/></svg>
+                    <p>Awaiting application data to run predictive models...</p>
+                </div>
+
+                <div class="inference-running" id="loading-state">
+                    <div class="loader">
+                        <div class="bar"></div><div class="bar"></div><div class="bar"></div>
+                    </div>
+                    <p>Analyzing application data...</p>
+                    <span class="loading-status">Model: global_mobility_v2.1.pkl</span>
+                </div>
+
+                <div class="inference-results" id="prediction-result">
+                    <div class="result-header">
+                        <h2>Inference Output</h2>
+                        <span class="badge success">Success</span>
+                    </div>
+
+                    <div class="score-card">
+                        <div class="circular-progress" id="probability-circle">
+                            <span class="progress-value" id="probability-value">0%</span>
+                        </div>
+                        <div class="score-details">
+                            <h3>Approval Probability</h3>
+                            <p id="probability-text">High likelihood of approval based on historical data.</p>
+                        </div>
+                    </div>
+
+                    <div class="metrics-grid">
+                        <div class="metric-box">
+                            <h4>Risk Level</h4>
+                            <p class="metric-value risk-low" id="risk-level">Low</p>
+                        </div>
+                        <div class="metric-box">
+                            <h4>Estimated Processing</h4>
+                            <p class="metric-value">4-6 Months</p>
+                        </div>
+                    </div>
+
+                    <div class="key-factors">
+                        <h3>Key Driving Factors</h3>
+                        <ul id="factor-list">
+                            <li><span class="impact positive">+</span> High demand for Software Engineering</li>
+                            <li><span class="impact positive">+</span> Strong years of experience (5)</li>
+                            <li><span class="impact negative">-</span> Nationality processing backlog</li>
+                        </ul>
+                    </div>
+
+                    <div class="raw-output-toggle">
+                        <button class="btn-secondary" id="raw-json-btn">View JSON Output</button>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <!-- Modal for JSON -->
+    <div class="modal" id="json-modal">
+        <div class="modal-content glass-panel">
+            <span class="close-btn" id="close-modal">&times;</span>
+            <h3>Raw API Response</h3>
+            <pre><code id="json-output"></code></pre>
+        </div>
+    </div>
+
+    <script src="global-mobility-analyzer.js"></script>
+</body>
+</html>
