@@ -12,8 +12,18 @@ A robust Python pipeline (`feature_validator.py`) designed to validate incoming 
 - Validates categorical data (e.g., valid visa types).
 - Includes custom business logic (e.g., origin and destination cannot be the same).
 
-### Running the Validator
+## Task 3: Deploy a Monitored ML Endpoint
+A production-ready `FastAPI` REST application (`app.py`) that serves the ML model predictions and exposes infrastructure and model-drift monitoring.
+- Provides a `/predict` endpoint that utilizes the feature validation pipeline.
+- Implements middleware to track latency and request counts.
+- Implements standard `/health` checks.
+- Exposes a `/metrics` endpoint serving `prometheus_client` data (tracking latency, request frequency, and statistical distribution of ML prediction scores).
+
+### Running the Monitored API Locally
 ```bash
-pip install pydantic
-python feature_validator.py
+pip install -r requirements.txt
+python app.py
 ```
+* The API will be available at: http://localhost:8000
+* Interactive Swagger Docs: http://localhost:8000/docs
+* Prometheus Metrics: http://localhost:8000/metrics
