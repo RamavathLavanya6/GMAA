@@ -16,6 +16,14 @@ document.addEventListener('DOMContentLoaded', () => {
     // Make placeholder visible initially
     placeholderPanel.classList.add('active');
 
+    function resetLoading() {
+        btnText.style.display = 'block';
+        btnSpinner.style.display = 'none';
+        form.querySelector('button').disabled = false;
+        loadingPanel.classList.remove('active');
+        placeholderPanel.classList.add('active');
+    }
+
     form.addEventListener('submit', (e) => {
         e.preventDefault();
         
@@ -28,7 +36,7 @@ document.addEventListener('DOMContentLoaded', () => {
         resultPanel.classList.remove('active');
         loadingPanel.classList.add('active');
 
-        // Capture data for simulation
+        // Capture data
         const formData = {
             name: document.getElementById('applicant-name').value,
             origin: document.getElementById('origin-country').value,
@@ -38,47 +46,33 @@ document.addEventListener('DOMContentLoaded', () => {
             skills: document.getElementById('skills').value.split(',').map(s => s.trim())
         };
 
-        // Simulate ML Inference Delay (2.5s)
-        setTimeout(() => {
-            simulateInferenceOutput(formData);
-        }, 2500);
+        // Call the Monitored ML Endpoint (FastAPI)
+        fetch('http://127.0.0.1:8000/predict', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(formData)
+        })
+        .then(response => {
+            if (!response.ok) {
+                return response.json().then(err => { throw err; });
+            }
+            return response.json();
+        })
+        .then(data => {
+            if(data.status === "success") {
+                renderInferenceOutput(formData, data);
+            }
+        })
+        .catch(err => {
+            console.error("API Error:", err);
+            alert("Failed to connect to ML Endpoint at http://127.0.0.1:8000.\nMake sure you run `python app.py` first!");
+            resetLoading();
+        });
     });
 
-    function simulateInferenceOutput(data) {
-        // Mock prediction logic based on form input inputs just to have dynamic output
-        let score = 45; // base
-        
-        if (data.experience > 3) score += 15;
-        if (data.experience > 8) score += 10;
-        
-        const highDemandSkills = ['python', 'machine learning', 'software engineering', 'ai', 'data science', 'nursing'];
-        const matchesSkill = data.skills.some(skill => highDemandSkills.includes(skill.toLowerCase()));
-        
-        if (matchesSkill) score += 25;
-        
-        if (data.visaType === 'skilled_worker') score += 5;
-        
-        // Add random variance between -5 and +5
-        score += Math.floor(Math.random() * 11) - 5;
-        
-        // Clamp to 10-98 (realistic model bounds)
-        score = Math.max(10, Math.min(98, score));
-
-        // Define Risk
-        let risk = 'Low';
-        let riskClass = 'risk-low';
-        let color = '#10b981'; // success
-        
-        if (score < 50) {
-            risk = 'High';
-            riskClass = 'risk-high';
-            color = '#ef4444'; // danger
-        } else if (score < 75) {
-            risk = 'Medium';
-            riskClass = 'risk-medium';
-            color = '#f59e0b'; // warning
-        }
-
+    function renderInferenceOutput(data, apiResponse) {
         // 2. Hide loading, show results
         loadingPanel.classList.remove('active');
         resultPanel.classList.add('active');
@@ -86,6 +80,20 @@ document.addEventListener('DOMContentLoaded', () => {
         btnText.style.display = 'block';
         btnSpinner.style.display = 'none';
         form.querySelector('button').disabled = false;
+
+        const score = Math.round(apiResponse.predictions.approval_probability * 100);
+        const risk = apiResponse.predictions.risk_category;
+        
+        let riskClass = 'risk-low';
+        let color = '#10b981'; // success
+        
+        if (risk === 'HIGH') {
+            riskClass = 'risk-high';
+            color = '#ef4444';
+        } else if (risk === 'MEDIUM') {
+            riskClass = 'risk-medium';
+            color = '#f59e0b';
+        }
 
         // Animate Circle
         animateCircle(score, color);
@@ -96,6 +104,9 @@ document.addEventListener('DOMContentLoaded', () => {
         
         const factorList = document.getElementById('factor-list');
         factorList.innerHTML = '';
+        
+        const highDemandSkills = ['python', 'machine learning', 'software engineering', 'ai', 'data science'];
+        const matchesSkill = data.skills.some(skill => highDemandSkills.includes(skill.toLowerCase()));
         
         if (matchesSkill) {
             factorList.innerHTML += `<li><span class="impact positive">+</span> High demand skill profile matched</li>`;
@@ -110,21 +121,8 @@ document.addEventListener('DOMContentLoaded', () => {
         
         // Save raw JSON for modal
         const rawJson = {
-            "model_version": "v2.1.0-prod",
-            "timestamp": new Date().toISOString(),
-            "inputs": data,
-            "predictions": {
-                "approval_probability": score / 100,
-                "confidence_score": 0.89,
-                "risk_category": risk.toUpperCase(),
-                "estimated_processing_days": Math.floor(Math.random() * 60) + 120
-            },
-            "features_importance": {
-                "skills_match": 0.42,
-                "experience_yrs": 0.28,
-                "origin_dest_correl": 0.15,
-                "visa_class": 0.15
-            }
+            "request_payload": data,
+            "api_response": apiResponse
         };
         
         document.getElementById('json-output').textContent = JSON.stringify(rawJson, null, 2);

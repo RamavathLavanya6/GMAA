@@ -2,11 +2,12 @@ import time
 import random
 import logging
 from fastapi import FastAPI, HTTPException, Request
+from fastapi.middleware.cors import CORSMiddleware
 from prometheus_client import Counter, Histogram, generate_latest, CONTENT_TYPE_LATEST
 from fastapi.responses import Response
 
 # Import the validation pipeline built in Task 3
-from feature_validator import FeatureValidationPipeline, ApplicationFeatureSchema
+from feature_validator import FeatureValidationPipeline
 
 # Setup Logging
 logging.basicConfig(level=logging.INFO)
@@ -17,6 +18,15 @@ app = FastAPI(
     title="Global Mobility ML Inference API",
     description="A monitored ML endpoint for predicting visa application success probabilities.",
     version="1.0.0"
+)
+
+# Enable CORS so the HTML frontend can connect to this API
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
 )
 
 # Initialize the Feature Validator
@@ -90,10 +100,8 @@ def predict(payload: dict):
         raise HTTPException(status_code=400, detail={"validation_errors": errors})
     
     # Step 2: Model Inference Simulation
-    # In a real environment, we would pass 'validated_data' to a loaded joblib/pickle ML model.
     time.sleep(random.uniform(0.1, 0.4)) # Simulate model execution delay
     
-    # Mocking prediction logic (same logic as the frontend UI for consistency)
     score = 45
     exp = validated_data.get('experience', 0)
     if exp > 3: score += 15
@@ -133,4 +141,4 @@ def predict(payload: dict):
 if __name__ == "__main__":
     import uvicorn
     logger.info("Starting Monitored ML Endpoint on port 8000")
-    uvicorn.run(app, host="0.0.0.0", port=8000)
+    uvicorn.run("app:app", host="127.0.0.1", port=8000, reload=True)
